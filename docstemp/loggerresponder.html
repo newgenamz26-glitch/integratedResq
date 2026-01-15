@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Responder Case Logger - Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; -webkit-tap-highlight-color: transparent; }
+        .hidden { display: none !important; }
+        .slide-up { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .mode-banner-test { background: linear-gradient(90deg, #F59E0B, #D97706); } 
+        .mode-banner-live { background: linear-gradient(90deg, #EF4444, #B91C1C); }
+        .mode-banner-sim { background: linear-gradient(90deg, #8B5CF6, #4C1D95); }
+        
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 400px; pointer-events: none; }
+        .toast { background: white; padding: 14px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; align-items: center; animation: fadeIn 0.3s; border-left: 6px solid #3B82F6; pointer-events: auto; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .input-field { width: 100%; padding: 10px 12px; border-radius: 10px; border: 2px solid #e5e7eb; font-size: 0.85rem; transition: all 0.2s; outline: none; background: white; }
+        .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .label-text { display: block; font-size: 0.65rem; font-weight: 800; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .section-header { border-left: 4px solid #3b82f6; padding-left: 10px; margin-bottom: 15px; margin-top: 25px; }
+        .section-header h4 { font-size: 0.75rem; font-weight: 900; color: #1f2937; text-transform: uppercase; letter-spacing: 0.1em; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+    </style>
+</head>
+<body class="h-screen w-full overflow-hidden text-gray-800">
+
+    <div id="toast-container"></div>
+
+    <!-- ================= VIEW: SPLASH ================= -->
+    <div id="view-splash" class="fixed inset-0 z-[200] bg-slate-900 flex flex-col justify-center items-center text-white transition-opacity duration-500">
+        <div class="animate-bounce mb-4">
+            <i class="fas fa-notes-medical text-5xl text-blue-500"></i>
+        </div>
+        <h1 class="text-xl font-bold tracking-widest uppercase">Responder System</h1>
+        <div class="mt-8 w-12 h-1 bg-blue-600 rounded-full animate-pulse"></div>
+    </div>
+
+    <!-- ================= VIEW: LOGIN ================= -->
+    <div id="view-login" class="hidden h-full w-full flex flex-col justify-center items-center p-6 bg-slate-50 relative overflow-y-auto">
+        <div class="w-full max-w-sm">
+            <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center p-3 bg-blue-50 rounded-2xl mb-4">
+                        <i class="fas fa-user-md text-3xl text-blue-600"></i>
+                    </div>
+                    <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Log Masuk</h1>
+                </div>
+
+                <form id="login-form" class="space-y-5">
+                    <div>
+                        <label class="label-text">Nama Penuh Responder</label>
+                        <input type="text" id="login-name" class="input-field" placeholder="Nama anda">
+                    </div>
+                    <div>
+                        <label class="label-text">Program Semasa</label>
+                        <select id="login-program" class="input-field"></select>
+                    </div>
+                    <div>
+                        <label class="label-text">Checkpoint (CP) / Lokasi</label>
+                        <select id="login-task" class="input-field"></select>
+                    </div>
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-xl transition transform active:scale-95 mt-4 uppercase text-xs tracking-widest">
+                        MULAKAN TUGAS <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-4 border-t border-dashed text-center">
+                    <button onclick="activateSimulation()" class="text-[10px] font-black text-purple-600 uppercase tracking-widest hover:text-purple-800">
+                        <i class="fas fa-vial mr-1"></i> Aktifkan Simulasi Data
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mt-8 flex justify-between items-center px-2">
+                <div class="flex items-center">
+                     <span class="text-[10px] font-black text-slate-400 uppercase mr-3">Mod Live</span>
+                     <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="mode-toggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300 left-0 border-gray-300"/>
+                        <label for="mode-toggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW: DASHBOARD ================= -->
+    <div id="view-dashboard" class="hidden h-full w-full flex flex-col bg-slate-100">
+        <header class="bg-white border-b border-gray-200 shadow-sm z-10">
+            <div id="status-bar" class="px-4 py-1 text-[9px] font-black flex justify-between items-center text-white uppercase tracking-tighter">
+                <span id="dash-mode-text">TEST MODE</span>
+                <span id="gps-status"><i class="fas fa-crosshairs animate-pulse"></i> <span id="gps-text">GPS: SEDANG MENCARI...</span></span>
+            </div>
+            <div class="p-5 flex justify-between items-center">
+                <div class="overflow-hidden mr-4">
+                    <h2 id="dash-program-name" class="font-black text-lg text-slate-800 leading-none truncate uppercase tracking-tighter">PROGRAM</h2>
+                    <p id="dash-responder-info" class="text-[10px] text-slate-500 font-bold mt-1 truncate uppercase tracking-widest">NAME • CP</p>
+                </div>
+                <button onclick="requestLogout()" class="shrink-0 bg-red-50 text-red-600 font-black text-[10px] px-4 py-2 rounded-full border border-red-100 uppercase tracking-widest active:bg-red-600 active:text-white transition">Log Keluar</button>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-5 pb-24 space-y-6">
+            <!-- Statistik & Buku Kes -->
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="refreshLocation(true)" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center active:bg-blue-50 transition">
+                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-2"><i class="fas fa-location-arrow"></i></div>
+                    <span class="text-[10px] font-black uppercase text-slate-600">Refresh GPS</span>
+                </button>
+                <button onclick="openHistory()" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center active:bg-blue-50 transition relative">
+                    <div id="case-badge" class="absolute top-2 right-2 bg-red-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-full hidden">0</div>
+                    <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-2"><i class="fas fa-notes-medical"></i></div>
+                    <span class="text-[10px] font-black uppercase text-slate-600">Buku Kes</span>
+                </button>
+            </div>
+            
+            <!-- Button Laporan Utama -->
+            <button onclick="openReportForm()" class="w-full py-8 bg-blue-600 text-white rounded-3xl shadow-xl flex flex-col items-center justify-center relative overflow-hidden active:scale-[0.98] transition transform">
+                <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fas fa-ambulance text-6xl"></i></div>
+                <i class="fas fa-plus-circle text-4xl mb-2"></i>
+                <span class="text-xl font-black uppercase tracking-tighter">Laporan Baru</span>
+            </button>
+
+            <!-- Pautan Pantas / Contact Section -->
+            <div class="pt-2">
+                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Pautan Pantas & Hubungan</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="tel:999" class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center shadow-sm active:bg-red-50 transition">
+                        <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center mr-3"><i class="fas fa-phone-alt text-[10px]"></i></div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black text-slate-800 uppercase leading-none">Hubungi HQ</span>
+                            <span class="text-[8px] font-bold text-slate-400 uppercase mt-1">Kecemasan</span>
+                        </div>
+                    </a>
+                    <a href="https://wa.me/60123456789" target="_blank" class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center shadow-sm active:bg-green-50 transition">
+                        <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3"><i class="fab fa-whatsapp text-[12px]"></i></div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black text-slate-800 uppercase leading-none">Marshall</span>
+                            <span class="text-[8px] font-bold text-slate-400 uppercase mt-1">Mesej Segera</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= MODAL: BORANG LAPORAN LENGKAP ================= -->
+    <div id="modal-report" class="hidden fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg h-[94vh] rounded-t-[40px] flex flex-col slide-up shadow-2xl overflow-hidden">
+            <div class="p-5 border-b flex justify-between items-center bg-slate-50">
+                <div>
+                    <h3 class="font-black uppercase text-slate-800 tracking-tighter text-sm">Borang Laporan Kes</h3>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" id="rpt-meta">ID: -- | 00:00:00</p>
+                </div>
+                <button onclick="closeModal('modal-report')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full text-gray-400 shadow-sm border"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 space-y-2 pb-10">
+                <div class="section-header"><h4>A. Maklumat Program & Lokasi</h4></div>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div><label class="label-text">Nama Responder</label><input type="text" id="rpt-res-name" class="input-field bg-gray-50 font-bold" readonly></div>
+                    <div><label class="label-text">Checkpoint</label><input type="text" id="rpt-cp" class="input-field bg-gray-50 font-bold" readonly></div>
+                </div>
+
+                <div class="section-header"><h4>B. Butiran Pesakit</h4></div>
+                <div class="space-y-3">
+                    <div><label class="label-text">Nama Pesakit / Mangsa</label><input type="text" id="rpt-p-name" class="input-field" placeholder="Nama penuh"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="label-text">Umur</label><input type="number" id="rpt-p-age" class="input-field" placeholder="Thn"></div>
+                        <div>
+                            <label class="label-text">Jantina</label>
+                            <select id="rpt-p-gender" class="input-field">
+                                <option value="Lelaki">Lelaki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-header"><h4>C. Maklumat Perubatan</h4></div>
+                <div class="space-y-3">
+                    <div><label class="label-text">Aduan Utama / Simptom</label><textarea id="rpt-med-main" class="input-field" rows="2" placeholder="Cth: Sesak nafas, pengsan, luka"></textarea></div>
+                    <div>
+                        <label class="label-text">Tahap Kesedaran</label>
+                        <select id="rpt-med-conscious" class="input-field">
+                            <option value="Sedar Penuh">Sedar Penuh (Alert)</option>
+                            <option value="Suara">Rangsangan Suara (Voice)</option>
+                            <option value="Sakit">Rangsangan Sakit (Pain)</option>
+                            <option value="Tidak Sedar">Tidak Sedar (Unresponsive)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="section-header"><h4>D. Vital Signs (Tanda Vital)</h4></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="label-text">Tekanan Darah (BP)</label><input type="text" id="rpt-v-bp" class="input-field" placeholder="120/80"></div>
+                    <div><label class="label-text">Kadar Nadi (PR)</label><input type="text" id="rpt-v-pr" class="input-field" placeholder="bpm"></div>
+                </div>
+
+                <div class="section-header"><h4>E. Rawatan & Status Akhir</h4></div>
+                <div class="space-y-3">
+                    <div><label class="label-text">Rawatan Yang Diberikan</label><textarea id="rpt-treatment" class="input-field" rows="2" placeholder="Cth: Dressing, CPR, Oksigen..."></textarea></div>
+                    <div>
+                        <label class="label-text">Status Akhir Kes</label>
+                        <select id="rpt-status" class="input-field">
+                            <option value="Selesai di Lokasi">Selesai di Lokasi</option>
+                            <option value="Dirujuk ke Hospital">Dirujuk ke Hospital</option>
+                            <option value="Diberikan kepada Waris">Diberikan kepada Waris</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <label class="label-text">Lokasi GPS (Lat, Long)</label>
+                    <input type="text" id="rpt-loc-coord" class="input-field bg-slate-50 font-mono text-[10px]" readonly>
+                </div>
+            </div>
+            
+            <div class="p-5 border-t bg-white">
+                <button onclick="submitDetailedReport()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:bg-blue-700 uppercase tracking-widest text-xs">Hantar Laporan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: SEJARAH (LIST VIEW) ================= -->
+    <div id="modal-history" class="hidden fixed inset-0 z-[60] bg-slate-100 flex flex-col">
+        <div class="p-5 bg-white border-b flex justify-between items-center shadow-sm">
+            <button onclick="closeModal('modal-history')" class="text-slate-800 font-bold text-xs uppercase"><i class="fas fa-arrow-left mr-2"></i> Dashboard</button>
+            <span class="font-black uppercase text-sm tracking-tight text-blue-600">Log Kes Lapangan</span>
+            <div class="w-8"></div>
+        </div>
+        <div id="history-list" class="flex-1 p-5 overflow-y-auto space-y-4">
+            <!-- Cards populated here -->
+        </div>
+    </div>
+
+    <!-- ================= MODAL: DETAIL CASE VIEW (POPUP) ================= -->
+    <div id="modal-case-detail" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/90 backdrop-blur-md p-4">
+        <div class="bg-white w-full max-w-lg max-h-[90vh] rounded-[32px] flex flex-col shadow-2xl overflow-hidden slide-up">
+            <div class="p-6 bg-slate-50 border-b flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center mr-3 shadow-md">
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-xs uppercase tracking-tight text-slate-800">Detail Laporan Kes</h3>
+                        <p id="det-timestamp" class="text-[9px] font-bold text-gray-400 uppercase"></p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-case-detail')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full text-gray-400 border"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="det-content" class="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
+                <!-- Content injected via JS -->
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t flex flex-wrap gap-2">
+                <button id="det-btn-verify" class="flex-1 bg-green-600 text-white font-black py-3 rounded-xl text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center">
+                    <i class="fas fa-check-double mr-2"></i> Sahkan
+                </button>
+                <button id="det-btn-whatsapp" class="flex-1 bg-[#25D366] text-white font-black py-3 rounded-xl text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center">
+                    <i class="fab fa-whatsapp mr-2"></i> Share
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="modal-confirm" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/80 p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-8 text-center shadow-2xl">
+            <i id="conf-icon" class="fas fa-question-circle text-4xl text-blue-600 mb-4"></i>
+            <h3 id="conf-title" class="font-black text-lg mb-2 uppercase tracking-tight">PENGESAHAN</h3>
+            <p id="conf-desc" class="text-xs text-gray-500 mb-6 leading-relaxed"></p>
+            <div class="flex gap-3">
+                <button onclick="closeModal('modal-confirm')" class="flex-1 py-3 bg-gray-100 text-gray-400 font-bold rounded-xl text-xs uppercase">Batal</button>
+                <button id="conf-btn-action" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl text-xs uppercase">Sahkan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const samplePrograms = [
+            { id: "P01", name: "Larian Merdeka 2024" },
+            { id: "P_SIM", name: "SIMULASI: Eksesais Bencana" }
+        ];
+        const sampleResponders = [
+            { name: "Ahmad Albab", checkpoint: "CP-Utama" },
+            { name: "Siti Sarah", checkpoint: "CP-Parkir A" },
+            { name: "Admin Simulasi", checkpoint: "CP-Zon Merah" }
+        ];
+
+        let appState = {
+            mode: 'test',
+            currentUser: null,
+            currentProgram: null,
+            cases: []
+        };
+
+        const SESSION_KEY = 'responder_pro_v4';
+
+        // --- SYSTEM ---
+        function initApp() {
+            setTimeout(() => {
+                const splash = document.getElementById('view-splash');
+                if(splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.classList.add('hidden'), 500);
+                }
+            }, 800);
+
+            const pSel = document.getElementById('login-program');
+            const tSel = document.getElementById('login-task');
+            samplePrograms.forEach(p => pSel.add(new Option(p.name, p.id)));
+            sampleResponders.forEach(r => tSel.add(new Option(`${r.checkpoint} - ${r.name}`, r.checkpoint)));
+
+            const saved = localStorage.getItem(SESSION_KEY);
+            if (saved) {
+                appState = JSON.parse(saved);
+                if (appState.currentUser) showDashboard(); else showLogin();
+            } else showLogin();
+            updateModeUI();
+        }
+
+        function saveSession() { localStorage.setItem(SESSION_KEY, JSON.stringify(appState)); }
+
+        function showLogin() { 
+            document.getElementById('view-login').classList.remove('hidden');
+            document.getElementById('view-dashboard').classList.add('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-dashboard').classList.remove('hidden');
+            document.getElementById('dash-program-name').innerText = appState.currentProgram.name;
+            document.getElementById('dash-responder-info').innerText = `${appState.currentUser.name} • ${appState.currentUser.task}`;
+            updateBadge();
+            refreshLocation(false);
+        }
+
+        function activateSimulation() {
+            appState.mode = 'simulation';
+            appState.currentUser = { name: "Simulasi User", task: "CP-Zon Merah" };
+            appState.currentProgram = samplePrograms.find(p => p.id === "P_SIM");
+            appState.cases = [
+                {
+                    id: 1001, timestamp: "13/01/2026, 14:30", responder: "Simulasi User", checkpoint: "CP-Zon Merah", verified: true,
+                    patient: { name: "Haris Jauhari", age: "45", gender: "Lelaki" },
+                    medical: { symptoms: "Kecederaan parah di lengan (Laceration)", conscious: "Sedar Penuh" },
+                    vitals: { bp: "110/70", pr: "98" },
+                    treatment: "Pressure bandage dan splinting", finalStatus: "Dirujuk ke Hospital", coords: "3.1390,101.6869"
+                },
+                {
+                    id: 1002, timestamp: "13/01/2026, 15:10", responder: "Ali Abu", checkpoint: "CP-Utama", verified: false,
+                    patient: { name: "Siti Nurhaliza", age: "28", gender: "Perempuan" },
+                    medical: { symptoms: "Sesak nafas (Asma)", conscious: "Sedar Penuh" },
+                    vitals: { bp: "125/85", pr: "105" },
+                    treatment: "Nebulizer 5mg Salbutamol", finalStatus: "Selesai di Lokasi", coords: "3.1579,101.7116"
+                }
+            ];
+            saveSession(); showDashboard(); updateModeUI(); showToast("Simulasi Diaktifkan", "success");
+        }
+
+        function updateModeUI() {
+            const bar = document.getElementById('status-bar');
+            if (appState.mode === 'simulation') {
+                bar.className = "px-4 py-1 text-[9px] font-black flex justify-between items-center text-white uppercase mode-banner-sim";
+                document.getElementById('dash-mode-text').innerText = "SIMULASI DATA";
+            } else {
+                bar.className = "px-4 py-1 text-[9px] font-black flex justify-between items-center text-white uppercase mode-banner-test";
+                document.getElementById('dash-mode-text').innerText = "TEST MODE";
+            }
+        }
+
+        // --- GPS ---
+        function refreshLocation(manual) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(p => {
+                    appState.location = `${p.coords.latitude.toFixed(6)},${p.coords.longitude.toFixed(6)}`;
+                    document.getElementById('gps-text').innerText = "GPS: AKTIF";
+                    if(manual) showToast("GPS dikemaskini", "info");
+                }, () => {
+                    document.getElementById('gps-text').innerText = "GPS: TIDAK AKTIF";
+                });
+            }
+        }
+
+        // --- REPORTING ---
+        function openReportForm() {
+            document.querySelectorAll('#modal-report input:not([readonly]), textarea').forEach(el => el.value = "");
+            document.getElementById('rpt-res-name').value = appState.currentUser.name;
+            document.getElementById('rpt-cp').value = appState.currentUser.task;
+            document.getElementById('rpt-loc-coord').value = appState.location || "-";
+            document.getElementById('rpt-meta').innerText = `ID: ${Date.now().toString().slice(-6)} | ${new Date().toLocaleTimeString()}`;
+            openModal('modal-report');
+        }
+
+        function submitDetailedReport() {
+            const name = document.getElementById('rpt-p-name').value;
+            if(!name) return showToast("Sila isi nama pesakit", "error");
+
+            const rpt = {
+                id: Date.now(),
+                timestamp: new Date().toLocaleString('ms-MY'),
+                responder: appState.currentUser.name,
+                checkpoint: appState.currentUser.task,
+                verified: false,
+                patient: { name, age: document.getElementById('rpt-p-age').value, gender: document.getElementById('rpt-p-gender').value },
+                medical: { symptoms: document.getElementById('rpt-med-main').value, conscious: document.getElementById('rpt-med-conscious').value },
+                vitals: { bp: document.getElementById('rpt-v-bp').value, pr: document.getElementById('rpt-v-pr').value },
+                treatment: document.getElementById('rpt-treatment').value,
+                finalStatus: document.getElementById('rpt-status').value,
+                coords: document.getElementById('rpt-loc-coord').value
+            };
+            appState.cases.unshift(rpt);
+            saveSession(); updateBadge(); closeModal('modal-report'); showToast("Laporan Berjaya Dihantar", "success");
+        }
+
+        // --- HISTORY ---
+        function openHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = "";
+
+            if (!appState.cases.length) {
+                list.innerHTML = "<div class='text-center py-20 text-gray-300 font-bold uppercase text-[10px]'>Tiada Rekod</div>";
+            } else {
+                const groups = appState.cases.reduce((acc, c) => {
+                    acc[c.checkpoint] = acc[c.checkpoint] || [];
+                    acc[c.checkpoint].push(c);
+                    return acc;
+                }, {});
+
+                Object.keys(groups).forEach(cp => {
+                    const section = document.createElement('div');
+                    section.innerHTML = `<h4 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">${cp}</h4>`;
+                    
+                    groups[cp].forEach(c => {
+                        const card = document.createElement('div');
+                        card.className = "bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 relative overflow-hidden mb-3 active:scale-[0.98] transition";
+                        card.innerHTML = `
+                            <div class="absolute top-0 left-0 w-1.5 h-full ${c.verified ? 'bg-green-500' : 'bg-blue-600'}"></div>
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex items-center">
+                                    <span class="font-black text-xs text-slate-800 uppercase tracking-tight mr-2">${c.patient.name}</span>
+                                    ${c.verified ? '<i class="fas fa-check-circle text-green-500 text-[10px]"></i>' : ''}
+                                </div>
+                                <span class="text-[8px] font-bold text-gray-400">${c.timestamp.split(',')[1] || ''}</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 font-bold mb-3"><i class="fas fa-stethoscope mr-1 text-blue-500"></i> ${c.medical.symptoms}</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[8px] font-black px-2 py-1 bg-blue-50 text-blue-600 rounded-lg uppercase">${c.finalStatus}</span>
+                                <div class="flex gap-2">
+                                    ${c.coords && c.coords !== '-' ? `<a href="https://www.google.com/maps/search/?api=1&query=${c.coords}" target="_blank" class="w-8 h-8 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center border border-gray-100"><i class="fas fa-map-marker-alt text-[10px]"></i></a>` : ''}
+                                    <button onclick="viewCaseDetail(${c.id})" class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg"><i class="fas fa-eye text-[10px]"></i></button>
+                                </div>
+                            </div>
+                        `;
+                        section.appendChild(card);
+                    });
+                    list.appendChild(section);
+                });
+            }
+            openModal('modal-history');
+        }
+
+        function viewCaseDetail(id) {
+            const c = appState.cases.find(x => x.id === id);
+            if(!c) return;
+
+            document.getElementById('det-timestamp').innerText = `${c.checkpoint} • ${c.timestamp}`;
+            const content = document.getElementById('det-content');
+            content.innerHTML = `
+                <div class="space-y-6 text-xs">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-4 rounded-2xl">
+                            <label class="label-text text-[10px]">Pesakit</label>
+                            <p class="font-black text-slate-800 uppercase">${c.patient.name}</p>
+                            <p class="text-[10px] font-bold text-gray-500">${c.patient.age}thn • ${c.patient.gender}</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl">
+                            <label class="label-text text-[10px]">Responder</label>
+                            <p class="font-black text-slate-800 uppercase">${c.responder}</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-dashed pt-4">
+                        <label class="label-text text-[10px]">Tanda Vital & Kesedaran</label>
+                        <div class="grid grid-cols-3 gap-2 mt-2">
+                            <div class="border p-2 rounded-xl text-center"><p class="text-[8px] text-gray-400 font-bold">BP</p><p class="font-black">${c.vitals.bp || '-'}</p></div>
+                            <div class="border p-2 rounded-xl text-center"><p class="text-[8px] text-gray-400 font-bold">Nadi</p><p class="font-black">${c.vitals.pr || '-'}</p></div>
+                            <div class="border p-2 rounded-xl text-center"><p class="text-[8px] text-gray-400 font-bold">AVPU</p><p class="font-black text-[9px]">${c.medical.conscious || '-'}</p></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                            <label class="label-text text-[10px] text-blue-600">Aduan Utama</label>
+                            <p class="font-bold text-slate-700 leading-relaxed">${c.medical.symptoms || 'Tiada aduan'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl">
+                            <label class="label-text text-[10px]">Rawatan Diberikan</label>
+                            <p class="font-bold text-slate-700 leading-relaxed">${c.treatment || 'Tiada rekod rawatan'}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-slate-900 text-white p-4 rounded-2xl">
+                        <div>
+                            <label class="label-text text-[10px] text-slate-400">Status Akhir</label>
+                            <p class="font-black uppercase tracking-widest text-[10px]">${c.finalStatus}</p>
+                        </div>
+                        <i class="fas fa-check-circle text-blue-400"></i>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('det-btn-verify').onclick = () => {
+                showConfirm("Sahkan Laporan?", "Adakah anda telah menyemak dan mengesahkan data kes ini?", () => {
+                    c.verified = true; saveSession(); openHistory(); closeModal('modal-case-detail'); showToast("Kes disahkan", "success");
+                });
+            };
+
+            document.getElementById('det-btn-whatsapp').onclick = () => {
+                const text = encodeURIComponent(`*LAPORAN KES RESPONDER*\n--------------------\nCP: ${c.checkpoint}\nPesakit: ${c.patient.name}\nAduan: ${c.medical.symptoms}\nStatus: ${c.finalStatus}\nLokasi: https://www.google.com/maps?q=${c.coords}`);
+                window.open(`https://wa.me/?text=${text}`, '_blank');
+            };
+
+            openModal('modal-case-detail');
+        }
+
+        // --- HELPERS ---
+        function updateBadge() {
+            const b = document.getElementById('case-badge');
+            if(b) {
+                b.innerText = appState.cases.length;
+                b.classList.toggle('hidden', !appState.cases.length);
+            }
+        }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function showToast(m, t) {
+            const c = document.getElementById('toast-container');
+            const d = document.createElement('div');
+            d.className = 'toast'; d.innerHTML = `<i class="fas fa-info-circle mr-3"></i><span class="text-[10px] font-black uppercase">${m}</span>`;
+            c.appendChild(d); setTimeout(() => d.remove(), 2500);
+        }
+        function showConfirm(t, d, a) {
+            document.getElementById('conf-title').innerText = t;
+            document.getElementById('conf-desc').innerText = d;
+            document.getElementById('conf-btn-action').onclick = () => { a(); closeModal('modal-confirm'); };
+            openModal('modal-confirm');
+        }
+        function requestLogout() { showConfirm("Log Keluar?", "Sesi tugasan anda akan ditamatkan.", () => { localStorage.removeItem(SESSION_KEY); location.reload(); }); }
+
+        document.getElementById('login-form').onsubmit = (e) => {
+            e.preventDefault();
+            const n = document.getElementById('login-name').value;
+            const p = document.getElementById('login-program').value;
+            const t = document.getElementById('login-task').value;
+            if(!n || !p || !t) return showToast("Lengkapkan borang", "error");
+            appState.currentUser = { name: n, task: t };
+            appState.currentProgram = samplePrograms.find(x => x.id === p);
+            saveSession(); showDashboard();
+        };
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
