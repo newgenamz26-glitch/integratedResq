@@ -192,6 +192,19 @@
 
     <!-- Form kemaskini program //updateProgram()-->
     <div id="programForm" class="hidden mt-2 space-y-2">
+<!-- Pilihan Simpan -->
+<div class="flex gap-3 mt-2">
+  <label class="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+    <input type="radio" name="saveMode" value="local" checked>
+    Simpan Lokal
+  </label>
+  <label class="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+    <input type="radio" name="saveMode" value="cloud">
+    Simpan Cloud
+  </label>
+</div>
+
+        
       <input type="text" id="progName" placeholder="Nama Program" class="w-full p-2 border border-sky-100 rounded-xl text-xs">
       <input type="date" id="progDate" class="w-full p-2 border border-sky-100 rounded-xl text-xs">
         <input type="time" id="progTime" class="w-full p-2 border rounded-xl text-xs">
@@ -230,6 +243,9 @@
     </div>
 
     <script>
+
+       
+
         // Versi 1.4 State
         let GAS_URL = localStorage.getItem('MECC_CLOUD_URL_V14') || '';
         let IS_LOCKED = localStorage.getItem('MECC_CLOUD_LOCKED_V14') === 'true';
@@ -529,6 +545,10 @@ function toggleProgramForm(){
   form.classList.toggle('hidden');
   generateProgramId(); // automatik generate ID semasa buka form
 }
+         function getSaveMode(){
+        const selected = document.querySelector('input[name="saveMode"]:checked');
+          return selected ? selected.value : 'local';
+            }
 
 // Generate Program ID format DDMMYY+NoProgram
 function generateProgramId(){
@@ -541,28 +561,89 @@ function generateProgramId(){
   document.getElementById('progIdDisplay').innerText="ID: "+id;
 }
 
-// Save program
-function saveProgram(){
-  const name=document.getElementById('progName').value.trim();
-  const date=document.getElementById('progDate').value;
-  const location=document.getElementById('progLocation').value;
-  const id=document.getElementById('progIdDisplay').innerText.replace("ID: ","");
+// Save program old code ; local only 
+     //function saveProgram(){
+      //const name=document.getElementById('progName').value.trim();
+      //const date=document.getElementById('progDate').value;
+      //const location=document.getElementById('progLocation').value;
+      //const id=document.getElementById('progIdDisplay').innerText.replace("ID: ","");
+    //  if(!name||!date||!location){ showPopup('error','Ralat','Sila lengkapkan semua medan'); return; }
+    //  const programs=JSON.parse(localStorage.getItem('MECC_PROGRAMS'))||[];
+      //programs.push({id,name,date,location});
+  //localStorage.setItem('MECC_PROGRAMS',JSON.stringify(programs));
+ // showPopup('case','Program Disimpan lokal ',name);
+//  document.getElementById('programForm').classList.add('hidden');
+//  updateProgramDots();
+//}
+        async function saveProgram(){
+  const name = document.getElementById('progName').value.trim();
+  const date = document.getElementById('progDate').value;
+  const location = document.getElementById('progLocation').value;
+  const id = document.getElementById('progIdDisplay').innerText.replace("ID: ","");
 
-  if(!name||!date||!location){ showPopup('error','Ralat','Sila lengkapkan semua medan'); return; }
+  if(!name || !date || !location){
+    return showPopup('error','Ralat','Sila lengkapkan semua medan');
+  }
 
-  const programs=JSON.parse(localStorage.getItem('MECC_PROGRAMS'))||[];
-  programs.push({id,name,date,location});
-  localStorage.setItem('MECC_PROGRAMS',JSON.stringify(programs));
-  showPopup('case','Program Disimpan',name);
-  document.getElementById('programForm').classList.add('hidden');
-  updateProgramDots();
+  const payload = { id, name, date, location };
+  const mode = getSaveMode();
+
+  /* =====================
+     SIMPAN LOKAL
+  ====================== */
+  if(mode === 'local'){
+    const programs = JSON.parse(localStorage.getItem('MECC_PROGRAMS')) || [];
+    programs.push(payload);
+    localStorage.setItem('MECC_PROGRAMS', JSON.stringify(programs));
+
+    showPopup('case','Program Disimpan (Lokal)', name);
+    updateProgramDots();
+    document.getElementById('programForm').classList.add('hidden');
+    return;
+  }
+
+  /* =====================
+     SIMPAN CLOUD
+  ====================== */
+  if(mode === 'cloud'){
+    if(!IS_LOCKED || !GAS_URL){
+      return showPopup(
+        'error',
+        'Cloud Tidak Aktif',
+        'Sila sambungkan Cloud di Tetapan dahulu.'
+      );
+    }
+
+    try{
+      await fetch(GAS_URL,{
+        method:'POST',
+        mode:'no-cors',
+        body:JSON.stringify({
+          action:'saveProgram',
+          payload
+        })
+      });
+
+      // set active program
+      ACTIVE_PROG = { id, namaprogram: name };
+      localStorage.setItem('MECC_ACTIVE_PROG_V14', JSON.stringify(ACTIVE_PROG));
+      updateActiveProgDisplay();
+
+      showPopup('case','Program Disimpan (Cloud)', name);
+      document.getElementById('programForm').classList.add('hidden');
+
+    }catch(e){
+      showPopup('error','Ralat Cloud','Gagal simpan ke Cloud.');
+    }
+  }
 }
+
 
 // Update dots bilangan program
 function updateProgramDots(){
   const programs=JSON.parse(localStorage.getItem('MECC_PROGRAMS'))||[];
   const dots='●'.repeat(programs.length);
-  document.getElementById('programDots').innerText=dots||'●';
+  document.getElementById('programDots').innerText=dots||'1●';
 }
 
 // Update backend status realtime
