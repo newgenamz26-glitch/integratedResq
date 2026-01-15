@@ -705,7 +705,17 @@ if(IS_LOCKED){
   status.className = "text-xs font-black px-2 py-1 rounded-full border text-red-600 border-red-200";
 }
 
-}   
+}
+        function emptyMessage(text){
+  return `
+  <p class="text-xs text-slate-400 text-center py-8 italic 
+  bg-white/50 rounded-[32px] border border-dashed border-sky-200">
+    ${text}
+  </p>`;
+}
+list.innerHTML = emptyMessage("Tiada data program disimpan.");
+select.innerHTML = '<option value="">-- Tiada program ditemui --</option>';
+
 
 // Panggil semasa init
 updateProgramDots();
