@@ -1,0 +1,30 @@
+✅ Versi BETUL
+select.innerHTML = '<option value="">-- Pilih Program --</option>';
+
+data.forEach(p => {
+  const opt = document.createElement('option');
+  opt.value = p.id || p.idprogram;
+  opt.innerText = p.namaprogram;
+  if (ACTIVE_PROG && opt.value === ACTIVE_PROG.id) opt.selected = true;
+  select.appendChild(opt);
+});
+
+function selectProgram(id) {
+    const select = document.getElementById('progSelect');
+    if(!select || !id) return;
+
+    const name = select.options[select.selectedIndex].text;
+    ACTIVE_PROG = { id, namaprogram: name };
+    localStorage.setItem('MECC_ACTIVE_PROG_V14', JSON.stringify(ACTIVE_PROG));
+    updateActiveProgDisplay();
+}
+function clearProgramUI(){
+  const list = document.getElementById('attendanceList');
+  const select = document.getElementById('progSelect');
+  if(list) list.innerHTML = emptyMessage("Tiada data program disimpan.");
+  if(select) select.innerHTML = '<option value="">-- Tiada program ditemui --</option>';
+}
+<button id="btnVerify"
+ class="w-full bg-sky-600 text-white py-2 rounded-xl text-[10px] font-bold">
+ SAHKAN
+</button>
