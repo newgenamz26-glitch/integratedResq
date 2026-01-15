@@ -345,7 +345,9 @@
                     list.appendChild(card);
                 });
             } catch (e) {
-                list.innerHTML = '<p class="text-xs text-rose-400 text-center py-8 font-bold italic">Ralat: Gagal memuat data Cloud.</p>';
+             list.innerHTML = `<p class="text-xs text-slate-400 text-center py-8 italic bg-white/50 rounded-[32px] border border-dashed border-sky-200">
+                                      Tiada data petugas ditemui.
+                                    </p>`;
             }
         }
 
