@@ -674,6 +674,15 @@ function updateProgramDots(){
       }
 
   }
+    const status = document.getElementById('backendStatus');
+if(IS_LOCKED){
+  status.innerText = "ONLINE";
+  status.className = "text-xs font-black px-2 py-1 rounded-full border text-green-600 border-green-200";
+}else{
+  status.innerText = "LUAR TALIAN";
+  status.className = "text-xs font-black px-2 py-1 rounded-full border text-red-600 border-red-200";
+}
+
 }   
 
 // Panggil semasa init
