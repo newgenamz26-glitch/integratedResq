@@ -234,7 +234,9 @@
         
         function init() {
             document.getElementById('backendUrlInput').value = GAS_URL;
-            document.getElementById('resNameInput').value = RESPONDER;
+           // document.getElementById('resNameInput').value = RESPONDER;
+            const el = document.getElementById('resNameInput');
+                if(el) el.value = RESPONDER;
             document.getElementById('countKes').innerText = localKesCount;
             updateLockUI();
             if (ACTIVE_PROG) updateActiveProgDisplay();
@@ -569,6 +571,13 @@ async function updateBackendStatus(){
     statusEl.innerText="LUAR TALIAN";
   }
 }
+        await updateBackendStatus();
+if(status OK){
+  IS_LOCKED=true;
+}else{
+  IS_LOCKED=false;
+}
+
 
 // Panggil semasa init
 updateProgramDots();
