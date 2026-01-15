@@ -375,7 +375,7 @@
                 }
                 
                 setTimeout(() => { fetchAttendance(); if(action==='endDuty') nav('dashboard'); }, 1500);
-            } catch (e) { showPopup('error', 'Ralat Cloud', 'Sambungan terputus. Sila cuba sebentar lagi.'); }
+            } catch (e) { showPopup('error', 'cloud disconnected', 'Sambungan terputus. Sila cuba sebentar lagi.'); }
         }
 
         async function verifyCloud() {
