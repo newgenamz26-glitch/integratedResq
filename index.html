@@ -225,8 +225,8 @@
 
     <script>
         // Versi 1.4 State
-       // let GAS_URL = localStorage.getItem('MECC_CLOUD_URL_V14') || '';
-     //   let IS_LOCKED = localStorage.getItem('MECC_CLOUD_LOCKED_V14') === 'true';
+        let GAS_URL = localStorage.getItem('MECC_CLOUD_URL_V14') || '';
+        let IS_LOCKED = localStorage.getItem('MECC_CLOUD_LOCKED_V14') === 'true';
         let ACTIVE_PROG = JSON.parse(localStorage.getItem('MECC_ACTIVE_PROG_V14')) || null;
         let RESPONDER = localStorage.getItem('MECC_RES_NAME_V14') || '';
         let localKesCount = parseInt(localStorage.getItem('MECC_KES_COUNT_V14')) || 0;
@@ -560,24 +560,27 @@ function updateProgramDots(){
 }
 
 // Update backend status realtime
-async function updateBackendStatus(){
-  if(!IS_LOCKED || !GAS_URL) return;
-  const statusEl=document.getElementById('backendStatus');
+//async function updateBackendStatus(){
+//  if(!IS_LOCKED || !GAS_URL) return;
+//  const statusEl=document.getElementById('backendStatus');
+//  try{
+//    const res=await fetch(GAS_URL+"?type=ping");
+ //   if(res.ok) statusEl.innerText="ONLINE";
+ //   else statusEl.innerText="MASALAH BACKEND";
+//  }catch(e){
+ //   statusEl.innerText="LUAR TALIAN";
+//  }
+//}
+        // Update backend status realtime code baru 
+        async function checkBackendStatus(){
+  if(!GAS_URL) return;
   try{
-    const res=await fetch(GAS_URL+"?type=ping");
-    if(res.ok) statusEl.innerText="ONLINE";
-    else statusEl.innerText="MASALAH BACKEND";
+    const res = await fetch(GAS_URL+"?type=ping");
+    IS_LOCKED = res.ok;
   }catch(e){
-    statusEl.innerText="LUAR TALIAN";
+    IS_LOCKED = false;
   }
-}
-        await updateBackendStatus();
-if(status OK){
-  IS_LOCKED=true;
-}else{
-  IS_LOCKED=false;
-}
-
+}   
 
 // Panggil semasa init
 updateProgramDots();
