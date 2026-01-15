@@ -451,9 +451,8 @@
 
         function selectProgram(id) {
             
-                        if(!select) return;
+                         if(!select || !id) return;
             const select = document.getElementById('progSelect');
-            if (!id) return;
             const name = select.options[select.selectedIndex].text;
             ACTIVE_PROG = { id, namaprogram: name };
             localStorage.setItem('MECC_ACTIVE_PROG_V14', JSON.stringify(ACTIVE_PROG));
