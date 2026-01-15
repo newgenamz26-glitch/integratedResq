@@ -683,28 +683,25 @@ function updateProgramDots(){
 //}
         // Update backend status realtime code baru 
         async function checkBackendStatus(){
-            const cloudRadio = document.querySelector('input[value="cloud"]');
-        if(cloudRadio){
-          cloudRadio.disabled = !IS_LOCKED;
-  if(!GAS_URL) return;
+  const status = document.getElementById('backendStatus');
+  if(!status) return;
+
   try{
-    const res = await fetch(GAS_URL+"?type=ping");
+    const res = await fetch(GAS_URL + "?type=ping");
     IS_LOCKED = res.ok;
   }catch(e){
     IS_LOCKED = false;
-      }
-
   }
-    const status = document.getElementById('backendStatus');
-if(IS_LOCKED){
-  status.innerText = "ONLINE";
-  status.className = "text-xs font-black px-2 py-1 rounded-full border text-green-600 border-green-200";
-}else{
-  status.innerText = "LUAR TALIAN";
-  status.className = "text-xs font-black px-2 py-1 rounded-full border text-red-600 border-red-200";
+
+  if(IS_LOCKED){
+    status.innerText = "ONLINE";
+    status.className = "text-xs font-black px-2 py-1 rounded-full border text-green-600 border-green-200";
+  }else{
+    status.innerText = "LUAR TALIAN";
+    status.className = "text-xs font-black px-2 py-1 rounded-full border text-red-600 border-red-200";
+  }
 }
 
-}
         function emptyMessage(text){
   return `
   <p class="text-xs text-slate-400 text-center py-8 italic 
