@@ -119,9 +119,7 @@
                 <div id="attendanceList" class="space-y-3">
                     
                     <p class="text-xs text-slate-400 text-center py-8 italic bg-white/50 rounded-[32px] border border-dashed border-sky-200">Menyemak data Cloud...</p>
-                    document.getElementById('attendanceList').innerHTML = 
-                        `<p class="text-xs text-slate-400 text-center py-8 italic bg-white/50 rounded-[32px] border border-dashed border-sky-200">
-                              Tiada data ditemui.
+                    
                         </p>`;
 
                 </div>
@@ -314,6 +312,9 @@
 
         // Attendance Logic
         async function fetchAttendance() {
+            document.getElementById('attendanceList').innerHTML =
+              emptyMessage("Tiada data ditemui.");
+
             if (!GAS_URL) return;
             const list = document.getElementById('attendanceList');
             try {
