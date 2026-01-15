@@ -660,12 +660,18 @@ function updateProgramDots(){
 //}
         // Update backend status realtime code baru 
         async function checkBackendStatus(){
+            const cloudRadio = document.querySelector('input[value="cloud"]');
+        if(cloudRadio){
+          cloudRadio.disabled = !IS_LOCKED;
   if(!GAS_URL) return;
   try{
     const res = await fetch(GAS_URL+"?type=ping");
     IS_LOCKED = res.ok;
   }catch(e){
     IS_LOCKED = false;
+      c
+}
+
   }
 }   
 
