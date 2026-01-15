@@ -145,7 +145,8 @@
                 <div class="pt-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Pilih Program</label>
                     <select id="progSelect" class="w-full p-4 mt-1 bg-slate-50 border-0 rounded-2xl text-sm font-bold text-sky-800" onchange="selectProgram(this.value)">
-                        <option value="">-- Muat Turun Senarai --</option>
+                       const select = document.getElementById('progSelect');
+                        if(!select) return;   <option value="">-- Muat Turun Senarai --</option>
                     </select>
                 </div>
                 </section>
