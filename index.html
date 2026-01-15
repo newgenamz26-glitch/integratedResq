@@ -413,6 +413,7 @@
         }
 
         async function fetchPrograms() {
+            if(!GAS_URL) return;
             const select = document.getElementById('progSelect');
             try {
                 const res = await fetch(`${GAS_URL}?type=getPrograms`);
@@ -558,7 +559,8 @@ function generateProgramId(){
   const dd=("0"+date.getDate()).slice(-2);
   const mm=("0"+(date.getMonth()+1)).slice(-2);
   const yy=date.getFullYear().toString().slice(-2);
-  const progCount=(JSON.parse(localStorage.getItem('MECC_PROGRAMS'))||[]).length+1;
+ // const progCount=(JSON.parse(localStorage.getItem('MECC_PROGRAMS'))||[]).length+1;
+    const progCount = Date.now().toString().slice(-3);
   const id=dd+mm+yy+'+'+("00"+progCount).slice(-3);
   document.getElementById('progIdDisplay').innerText="ID: "+id;
 }
