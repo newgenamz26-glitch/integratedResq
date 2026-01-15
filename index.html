@@ -180,6 +180,30 @@
                     <button id="btnReset" onclick="resetCloud()" class="w-full border-2 border-rose-50 text-rose-400 p-4 rounded-2xl font-black text-sm hidden">RESET KONFIGURASI</button>
                 </div>
             </section>
+            <section class="bg-white p-7 rounded-[32px] shadow-sm border border-sky-50">
+    <h3 class="font-bold text-slate-800 border-b border-slate-50 pb-4 mb-6 text-sm">
+        📋 Kemaskini Program
+    </h3>
+
+    <div class="space-y-4">
+        <input id="progName" placeholder="Nama Program"
+            class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-semibold">
+
+        <input id="progDate" type="date"
+            class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-semibold">
+
+        <input id="progTime" type="time"
+            class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-semibold">
+
+        <input id="progLocation" placeholder="Lokasi Program"
+            class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-semibold">
+
+        <button onclick="updateProgram()"
+            class="w-full bg-sky-600 text-white p-4 rounded-2xl font-black text-sm shadow-lg">
+            SIMPAN / KEMASKINI PROGRAM
+        </button>
+    </div>
+</section>
         </div>
     </div>
 
@@ -423,7 +447,52 @@
                 setTimeout(() => { nav('dashboard'); fetchAttendance(); }, 2000);
             } catch (e) { showPopup('error', 'Ralat Penghantaran', 'Data gagal dihantar. Semak talian internet anda.'); }
         }
+async function updateProgram() {
+    if (!IS_LOCKED) {
+        return showPopup('error', 'Cloud Tidak Aktif', 'Sila sahkan sambungan Cloud dahulu.');
+    }
 
+    const name = document.getElementById('progName').value.trim();
+    const date = document.getElementById('progDate').value;
+    const time = document.getElementById('progTime').value;
+    const location = document.getElementById('progLocation').value.trim();
+
+    if (!name || !date || !time || !location) {
+        return showPopup('error', 'Maklumat Tidak Lengkap', 'Sila lengkapkan semua butiran program.');
+    }
+
+    const payload = {
+        id: ACTIVE_PROG ? ACTIVE_PROG.id : "P-" + Date.now(),
+        name,
+        date,
+        time,
+        location
+    };
+
+    try {
+        await fetch(GAS_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                action: 'updateProgram',
+                payload
+            })
+        });
+
+        ACTIVE_PROG = { id: payload.id, namaprogram: name };
+        localStorage.setItem('MECC_ACTIVE_PROG_V14', JSON.stringify(ACTIVE_PROG));
+        updateActiveProgDisplay();
+
+        showPopup(
+            'case',
+            'Program Dikemaskini',
+            'Maklumat program berjaya disimpan ke Cloud.'
+        );
+
+    } catch (e) {
+        showPopup('error', 'Ralat', 'Gagal menyimpan data program.');
+    }
+}
         window.onload = init;
     </script>
 </body>
