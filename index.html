@@ -442,6 +442,9 @@
                     opt.innerText = p.namaprogram;
                     if (ACTIVE_PROG && opt.value === ACTIVE_PROG.id) opt.selected = true;
                     select.appendChild(opt);
+                        select.innerHTML = '<option value="">-- Pilih Program --</option>';
+                    data.forEach(...)
+
                 });
             } catch (e) {
                 // ❌ JANGAN papar ralat
