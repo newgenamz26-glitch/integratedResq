@@ -413,20 +413,32 @@
         }
 
         async function fetchPrograms() {
-            if(!GAS_URL) return;
             const select = document.getElementById('progSelect');
+            if(!GAS_URL){
+            select.innerHTML = '<option value="">-- Cloud belum disambung --</option>';
+            return;
+              }
+            
+            
             try {
                 const res = await fetch(`${GAS_URL}?type=getPrograms`);
                 const data = await res.json();
-                select.innerHTML = '<option value="">-- Pilih Program --</option>';
-                data.forEach(p => {
+                // JIKA TIADA DATA
+                    if(!Array.isArray(data) || data.length === 0){
+                      select.innerHTML = '<option value="">-- Tiada program disimpan --</option>';
+                      return;
+                    }
+                    data.forEach(p => {
                     const opt = document.createElement('option');
                     opt.value = p.id || p.idprogram;
                     opt.innerText = p.namaprogram;
                     if (ACTIVE_PROG && opt.value === ACTIVE_PROG.id) opt.selected = true;
                     select.appendChild(opt);
                 });
-            } catch (e) {}
+            } catch (e) {
+                // ❌ JANGAN papar ralat
+                select.innerHTML = '<option value="">-- Tidak dapat muat senarai program --</option>';
+            }
         }
 
         function selectProgram(id) {
